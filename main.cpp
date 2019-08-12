@@ -1,16 +1,16 @@
 #include "segSegIsect.hpp"
 #include <cstdio>
+#include <cassert>
 
 int main() {
-  Segment2D u;
-  u.P0[0] = 0; u.P0[1] = 0; 
-  u.P1[0] = 1; u.P1[1] = 0; 
-  Segment2D v;
-  v.P0[0] = .5; v.P0[1] = -1; 
-  v.P1[0] = .5; v.P1[1] = 1; 
-  Point2D a;
-  Point2D b;
+  Real pts[4] = {0,0,1,0};
+  Segment2D u = segment(pts);
+  Real ptsv[4] = {.5,-1,.5,1};
+  Segment2D v = segment(ptsv);
+  Point2D a,b;
   int ret = intersect2D_2Segments(u,v,&a,&b);
+  assert(ret == 1);
+  assert(a.x == .5 && a.y == 0);
   printf("ret %d I0 %.3f %.3f\n", ret, a.x, a.y);
   return 0;
 }
