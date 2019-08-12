@@ -65,7 +65,38 @@ Real perp(Vector2D u, Vector2D v) {
   return p;
 };
 
+void set(Point2D* a, Real b[2]) {
+  (*a).x = b[0];
+  (*a).y = b[1];
+}
+
+void set(Point2D* a, Vector2D v) {
+  (*a).x = v.x;
+  (*a).y = v.y;
+}
+
 #define SMALL_NUM   0.00000001 // anything that avoids division overflow
+
+// inSegment(): determine if a point is inside a segment
+//    Input:  a point P, and a collinear segment S
+//    Return: 1 = P is inside S
+//            0 = P is  not inside S
+int inSegment(Real P[2], Segment2D S)
+{
+  if (S.P0[0] != S.P1[0]) {    // S is not  vertical
+    if (S.P0[0] <= P[0] && P[0] <= S.P1[0])
+      return 1;
+    if (S.P0[0] >= P[0] && P[0] >= S.P1[0])
+      return 1;
+  }
+  else {    // S is vertical, so test y  coordinate
+    if (S.P0[1] <= P[1] && P[1] <= S.P1[1])
+      return 1;
+    if (S.P0[1] >= P[1] && P[1] >= S.P1[1])
+      return 1;
+  }
+  return 0;
+}
 
 // intersect2D_2Segments(): find the 2D intersection of 2 finite segments
 //    Input:  two finite segments S1 and S2
@@ -75,7 +106,7 @@ Real perp(Vector2D u, Vector2D v) {
 //            1=intersect  in unique point I0
 //            2=overlap  in segment from I0 to I1
 int
-intersect2D_2Segments( Segment S1, Segment S2, Real* I0, Real* I1 )
+intersect2D_2Segments( Segment2D S1, Segment2D S2, Point2D* I0, Point2D* I1 )
 {
     Vector2D u = sub(S1.P1,S1.P0);
     Vector2D v = sub(S2.P1,S2.P0);
@@ -94,24 +125,24 @@ intersect2D_2Segments( Segment S1, Segment S2, Real* I0, Real* I1 )
         if (du==0 && dv==0) {            // both segments are points
             if (S1.P0 !=  S2.P0)         // they are distinct  points
                  return 0;
-            set(*I0,S1.P0);                 // they are the same point
+            set(I0,S1.P0);                 // they are the same point
             return 1;
         }
         if (du==0) {                     // S1 is a single point
             if  (inSegment(S1.P0, S2) == 0)  // but is not in S2
                  return 0;
-            set(*I0,S1.P0);                 // they are the same point
+            set(I0,S1.P0);                 // they are the same point
             return 1;
         }
         if (dv==0) {                     // S2 a single point
             if  (inSegment(S2.P0, S1) == 0)  // but is not in S1
                  return 0;
-            set(*I0,S2.P0);                 // they are the same point
+            set(I0,S2.P0);                 // they are the same point
             return 1;
         }
         // they are collinear segments - get  overlap (or not)
         Real t0, t1;                    // endpoints of S1 in eqn for S2
-        Vector w2 = sub(S1.P1,S2.P0);
+        Vector2D w2 = sub(S1.P1,S2.P0);
         if (v.x != 0) {
                  t0 = w.x / v.x;
                  t1 = w2.x / v.x;
@@ -129,13 +160,13 @@ intersect2D_2Segments( Segment S1, Segment S2, Real* I0, Real* I1 )
         t0 = t0<0? 0 : t0;               // clip to min 0
         t1 = t1>1? 1 : t1;               // clip to max 1
         if (t0 == t1) {                  // intersect is a point
-            *I0 = add(S2.P0,mult(t0,v));
+            set(I0,add(mult(v,t0),S2.P0));
             return 1;
         }
 
         // they overlap in a valid subsegment
-        *I0 = S2.P0 + t0 * v;
-        *I1 = S2.P0 + t1 * v;
+        set(I0, add(mult(v,t0),S2.P0));
+        set(I0, add(mult(v,t1),S2.P0));
         return 2;
     }
 
@@ -150,7 +181,7 @@ intersect2D_2Segments( Segment S1, Segment S2, Real* I0, Real* I1 )
     if (tI < 0 || tI > 1)                // no intersect with S2
         return 0;
 
-    *I0 = S1.P0 + sI * u;                // compute S1 intersect point
+    set(I0, add(mult(u,sI),S1.P0));      // compute S1 intersect point
     return 1;
 }
 //===================================================================
