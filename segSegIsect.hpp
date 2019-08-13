@@ -5,6 +5,8 @@
 // liable for any real or imagined damage resulting from its use.
 // Users of this code must verify correctness for their application.
 
+#include "math.h" //fabs
+
 typedef double Real;
 
 typedef struct {
@@ -127,8 +129,7 @@ intersect2D_2Segments( Segment2D S1, Segment2D S2, Point2D* I0, Point2D* I1 )
     Real     D = perp(u,v);
 
     // test if  they are parallel (includes either being a point)
-    if ( (D >= 0 && D < SMALL_NUM) ||
-         (D <  0 && -1*D < SMALL_NUM) ) {   // S1 and S2 are parallel
+    if ( fabs(D) < SMALL_NUM ) {   // S1 and S2 are parallel
         if (perp(u,w) != 0 || perp(v,w) != 0)  {
             return 0;                    // they are NOT collinear
         }
