@@ -20,12 +20,12 @@ typedef struct {
   Real x,y;
 } Vector2D;
 
-Segment2D segment(Real pts[4]) {
+Segment2D segment(Real ax, Real ay, Real bx, Real by) {
   Segment2D s;
-  s.P0[0] = pts[0];
-  s.P0[1] = pts[1];
-  s.P1[0] = pts[2];
-  s.P1[1] = pts[3];
+  s.P0[0] = ax;
+  s.P0[1] = ay;
+  s.P1[0] = bx;
+  s.P1[1] = by;
   return s;
 }
 
