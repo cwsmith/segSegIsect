@@ -1,4 +1,5 @@
-set terminal qt size 1920,1920 enhanced font 'Verdana,16' persist
+set terminal png size 1920,1920 enhanced font 'Verdana,16'
+set output 'tests.png'
 
 stats 'points.gp' u 1:2 nooutput
 blocks = STATS_blocks
