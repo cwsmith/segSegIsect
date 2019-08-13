@@ -127,7 +127,8 @@ intersect2D_2Segments( Segment2D S1, Segment2D S2, Point2D* I0, Point2D* I1 )
     Real     D = perp(u,v);
 
     // test if  they are parallel (includes either being a point)
-    if (D < SMALL_NUM) {           // S1 and S2 are parallel
+    if ( (D >= 0 && D < SMALL_NUM) ||
+         (D <  0 && -1*D < SMALL_NUM) ) {   // S1 and S2 are parallel
         if (perp(u,w) != 0 || perp(v,w) != 0)  {
             return 0;                    // they are NOT collinear
         }
