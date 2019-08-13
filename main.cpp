@@ -52,6 +52,12 @@ void f8(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
   *res = 0;
 }
 
+void f9(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
+  *u = segment(0,1,0,1);
+  *v = segment(0,0,0,0);
+  *res = 0;
+}
+
 void t1(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
   *u = segment(-4,0,4,0);
   *v = segment(0,-4,0,4);
@@ -86,6 +92,13 @@ void t5(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
   *res = 2;
 }
 
+void t6(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
+  *u = segment(0,0,0,0);
+  *v = segment(0,0,0,0);
+  *res = 1;
+  pt->x = 0; pt->y = 0;
+}
+
 void test(Segment2D u, Segment2D v, int exp, Point2D pt) {
   Point2D a,b;
   int ret = intersect2D_2Segments(u,v,&a,&b);
@@ -114,6 +127,8 @@ int main() {
   test(u, v, res, pt);
   f8(&u, &v, &res, &pt);
   test(u, v, res, pt);
+  f9(&u, &v, &res, &pt);
+  test(u, v, res, pt);
   t1(&u, &v, &res, &pt);
   test(u, v, res, pt);
   t2(&u, &v, &res, &pt);
@@ -123,6 +138,8 @@ int main() {
   t4(&u, &v, &res, &pt);
   test(u, v, res, pt);
   t5(&u, &v, &res, &pt);
+  test(u, v, res, pt);
+  t6(&u, &v, &res, &pt);
   test(u, v, res, pt);
   return 0;
 }

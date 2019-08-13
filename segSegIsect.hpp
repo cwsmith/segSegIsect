@@ -84,6 +84,10 @@ void set(Point2D* a, Vector2D v) {
   (*a).y = v.y;
 }
 
+bool notEqual(Real a[2], Real b[2]) {
+  return (a[0] != b[0] || a[1] != b[1]);
+}
+
 #define SMALL_NUM   0.00000001 // anything that avoids division overflow
 
 // inSegment(): determine if a point is inside a segment
@@ -132,7 +136,7 @@ intersect2D_2Segments( Segment2D S1, Segment2D S2, Point2D* I0, Point2D* I1 )
         Real du = dot(u,u);
         Real dv = dot(v,v);
         if (du==0 && dv==0) {            // both segments are points
-            if (S1.P0 !=  S2.P0)         // they are distinct  points
+            if (notEqual(S1.P0,S2.P0))         // they are distinct  points
                  return 0;
             set(I0,S1.P0);                 // they are the same point
             return 1;
