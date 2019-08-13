@@ -2,7 +2,13 @@
 #include <cstdio>
 #include <cassert>
 
-
+FILE* outfile;
+void draw(Segment2D u, Segment2D v, int ret) {
+  fprintf(outfile,"%.3f %.3f %.3f %.3f\n",
+      u.P0[0], u.P0[1], u.P1[0], u.P1[1]);
+  fprintf(outfile,"%.3f %.3f %.3f %.3f\n\n\n",
+      v.P0[0], v.P0[1], v.P1[0], v.P1[1]);
+}
 
 void f1(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
   *u = segment(0, 0, 7, 7);
@@ -62,6 +68,19 @@ void f10(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
   *u = segment(0,0,0,0);
   *v = segment(1,1,2,2);
   *res = 0;
+}
+
+void f11(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
+  *u = segment(2,6,2,6);
+  *v = segment(2,-1,2,5);
+  *res = 0;
+}
+
+void t0(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
+  *u = segment(2,4,2,4);
+  *v = segment(2,-1,2,5);
+  *res = 1;
+  pt->x = 2; pt->y = 4;
 }
 
 void t1(Segment2D* u, Segment2D* v, int* res, Point2D* pt) {
@@ -138,9 +157,12 @@ void test(Segment2D u, Segment2D v, int exp, Point2D pt) {
   assert(ret == exp);
   if( ret == 1 )
     assert(a.x == pt.x && a.y == pt.y);
+  draw(u,v,ret);
 }
 
+
 int main() {
+  outfile = fopen("points.gp","w");
   Segment2D u, v;  
   int res;
   Point2D pt;
@@ -164,7 +186,11 @@ int main() {
   test(u, v, res, pt);
   f10(&u, &v, &res, &pt);
   test(u, v, res, pt);
+  f11(&u, &v, &res, &pt);
+  test(u, v, res, pt);
 
+  t0(&u, &v, &res, &pt);
+  test(u, v, res, pt);
   t1(&u, &v, &res, &pt);
   test(u, v, res, pt);
   t2(&u, &v, &res, &pt);
@@ -185,5 +211,6 @@ int main() {
   test(u, v, res, pt);
   t10(&u, &v, &res, &pt);
   test(u, v, res, pt);
+  fclose(outfile);
   return 0;
 }
