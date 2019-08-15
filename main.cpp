@@ -199,11 +199,13 @@ int addTest(Segment2D u, Segment2D v, Point2D pt, int r,
 KOKKOS_INLINE_FUNCTION
 bool are_close(Real a, Real b) {
   const Real floor = 1e-10;
+  const Real tol = 1e-10;
   Real am = abs(a);
   Real bm = abs(b);
   if (am <= floor && bm <= floor) return true;
   Real max = (a < b) ? (b) : (a);
-  return (abs(b - a) / max) < floor;
+  Real s = abs(b-a);
+  return (s / max) < tol;
 }
 
 void runTests(TestViews& tv, int numTests) {
@@ -213,8 +215,10 @@ void runTests(TestViews& tv, int numTests) {
   auto y2 = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.y2);
   auto xpt = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.xpt);
   auto ypt = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.ypt);
-  auto res = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.res);
-  Kokkos::parallel_for("kktest", numTests, KOKKOS_LAMBDA(const int i) {
+  auto expected = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.res);
+  Reals_d res("test_result", numTests);
+  Reals_d pts("test_pts", numTests*2);
+  Kokkos::parallel_for("run_tests", numTests, KOKKOS_LAMBDA(const int i) {
     int idx = i*2;
     Segment2D u,v;
     u.P0[0] = x1(idx);
@@ -225,31 +229,31 @@ void runTests(TestViews& tv, int numTests) {
     v.P0[1] = y1(idx+1);
     v.P1[0] = x2(idx+1);
     v.P1[1] = y2(idx+1);
-    Point2D pt;
-    pt.x = xpt(i);
-    pt.y = ypt(i);
-    const int exp = res(i);
+    const int exp = expected(i);
     Point2D a,b;
-    int ret = intersect2D_2Segments(u,v,&a,&b);
-    if(ret != exp) {
-      printf("test %d failed: ret %d exp %d u %.3f %.3f %.3f %.3f v %.3f %.3f %.3f %.3f\n",
-        i, ret, exp,
-        u.P0[0],
-        u.P0[1],
-        u.P1[0],
-        u.P1[1],
-        v.P0[0],
-        v.P0[1],
-        v.P1[0],
-        v.P1[1]);
-    }
-    assert(ret == exp);
-    if( ret == 1 ) {
-      if( !are_close(a.x,pt.x) || !are_close(a.y,pt.y) ) {
+    res(i) = intersect2D_2Segments(u,v,&a,&b);
+    pts(idx) = a.x;
+    pts(idx+1) = a.y;
+  });
+
+  Kokkos::parallel_for("check_test_results", numTests, KOKKOS_LAMBDA(const int i) {
+    Point2D expected_pt;
+    expected_pt.x = xpt(i);
+    expected_pt.y = ypt(i);
+    Point2D pt;
+    pt.x = pts(i*2);
+    pt.y = pts(i*2+1);
+    if(res(i) != expected(i))
+      printf("test %d failed: ret %d exp %d\n", i, res(i), expected(i));
+    assert( res(i) == expected(i) );
+    if( res(i) == 1 ) {
+      if( !are_close(pt.x,expected_pt.x) ||
+          !are_close(pt.y,expected_pt.y) ) {
         printf("test %d failed: pt %f %f a %f %f\n",
-            i, pt.x, pt.y, a.x, a.y);
+            i, expected_pt.x, expected_pt.y, pt.x, pt.y);
       }
-      assert( are_close(a.x,pt.x) && are_close(a.y,pt.y) );
+      assert( are_close(pt.x,expected_pt.x) &&
+              are_close(pt.y,expected_pt.y) );
     }
   });
 }
@@ -323,6 +327,7 @@ int main(int argc, char** argv) {
 
 
   outfile = fopen("points.gp","w");
+  Kokkos::Timer timer;
   Segment2D u, v;  
   int res;
   Point2D pt;
@@ -371,8 +376,8 @@ int main(int argc, char** argv) {
   test(u, v, res, pt);
   t10(&u, &v, &res, &pt);
   test(u, v, res, pt);
+  printf("serial testing finished (seconds) %f\n", timer.seconds());
   fclose(outfile);
-  printf("serial tests passed\n");
 
   kkTests();
 
