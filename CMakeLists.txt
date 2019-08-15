@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+project(cmake_and_cuda LANGUAGES CXX)
+
+add_executable(kkmain main.cpp)
+find_package(Kokkos REQUIRED CONFIG NO_DEFAULT_PATH PATHS ${KOKKOS_DIR})
+message("kk_include ${Kokkos_INCLUDE_DIRS}")
+message("kk_LIBRARIES ${Kokkos_LIBRARIES}")
+message("kk_LIBRARY_DIRS ${Kokkos_LIBRARY_DIRS}")
+target_include_directories(kkmain PRIVATE ${Kokkos_INCLUDE_DIRS})
+target_link_libraries(kkmain ${Kokkos_LIBRARIES})

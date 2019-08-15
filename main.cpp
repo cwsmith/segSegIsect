@@ -1,6 +1,7 @@
 #include "segSegIsect.hpp"
 #include <cstdio>
 #include <cassert>
+#include <Kokkos_Core.hpp>
 
 FILE* outfile;
 void draw(Segment2D u, Segment2D v, int ret) {
@@ -160,8 +161,17 @@ void test(Segment2D u, Segment2D v, int exp, Point2D pt) {
   draw(u,v,ret);
 }
 
+void kkTests() {
+  auto numTests = 22;
+  Kokkos::View<Real*, Kokkos::HostSpace> x("x", numTests*2);
+  Kokkos::View<Real*, Kokkos::HostSpace> y("y", numTests*2);
+}
 
-int main() {
+int main(int argc, char** argv) {
+  Kokkos::initialize( argc, argv );
+
+  kkTests();
+
   outfile = fopen("points.gp","w");
   Segment2D u, v;  
   int res;
@@ -212,5 +222,6 @@ int main() {
   t10(&u, &v, &res, &pt);
   test(u, v, res, pt);
   fclose(outfile);
+  Kokkos::finalize();
   return 0;
 }
