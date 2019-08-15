@@ -6,6 +6,7 @@
 // Users of this code must verify correctness for their application.
 
 #include "math.h" //fabs
+#include <Kokkos_Core.hpp>
 
 typedef double Real;
 
@@ -31,6 +32,7 @@ Segment2D segment(Real ax, Real ay, Real bx, Real by) {
   return s;
 }
 
+KOKKOS_INLINE_FUNCTION
 Vector2D sub(Real a[2], Real b[2]) {
   Vector2D v;
   v.x = a[0] - b[0];
@@ -38,6 +40,7 @@ Vector2D sub(Real a[2], Real b[2]) {
   return v;
 };
 
+KOKKOS_INLINE_FUNCTION
 Vector2D sub(Vector2D u, Vector2D v) {
   Vector2D w;
   w.x = u.x - v.x;
@@ -45,6 +48,7 @@ Vector2D sub(Vector2D u, Vector2D v) {
   return w;
 }
 
+KOKKOS_INLINE_FUNCTION
 Vector2D add(Vector2D u, Vector2D v) {
   Vector2D w;
   w.x = u.x + v.x;
@@ -52,6 +56,7 @@ Vector2D add(Vector2D u, Vector2D v) {
   return w;
 }
 
+KOKKOS_INLINE_FUNCTION
 Vector2D add(Vector2D u, Real v[2]) {
   Vector2D w;
   w.x = u.x + v[0];
@@ -59,6 +64,7 @@ Vector2D add(Vector2D u, Real v[2]) {
   return w;
 }
 
+KOKKOS_INLINE_FUNCTION
 Vector2D mult(Vector2D u, Real s) {
   Vector2D w;
   w.x = u.x * s;
@@ -66,26 +72,31 @@ Vector2D mult(Vector2D u, Real s) {
   return w;
 }
 
+KOKKOS_INLINE_FUNCTION
 Real dot(Vector2D u, Vector2D v) {
   Real d = (u.x * v.x) + (u.y * v.y);
   return d;
 };
 
+KOKKOS_INLINE_FUNCTION
 Real perp(Vector2D u, Vector2D v) {
   Real p = (u.x * v.y) - (u.y * v.x);
   return p;
 };
 
+KOKKOS_INLINE_FUNCTION
 void set(Point2D* a, Real b[2]) {
   (*a).x = b[0];
   (*a).y = b[1];
 }
 
+KOKKOS_INLINE_FUNCTION
 void set(Point2D* a, Vector2D v) {
   (*a).x = v.x;
   (*a).y = v.y;
 }
 
+KOKKOS_INLINE_FUNCTION
 bool notEqual(Real a[2], Real b[2]) {
   return (a[0] != b[0] || a[1] != b[1]);
 }
@@ -96,6 +107,7 @@ bool notEqual(Real a[2], Real b[2]) {
 //    Input:  a point P, and a collinear segment S
 //    Return: 1 = P is inside S
 //            0 = P is  not inside S
+KOKKOS_INLINE_FUNCTION
 int inSegment(Real P[2], Segment2D S)
 {
   if (S.P0[0] != S.P1[0]) {    // S is not  vertical
@@ -120,8 +132,8 @@ int inSegment(Real P[2], Segment2D S)
 //    Return: 0=disjoint (no intersect)
 //            1=intersect  in unique point I0
 //            2=overlap  in segment from I0 to I1
-int
-intersect2D_2Segments( Segment2D S1, Segment2D S2, Point2D* I0, Point2D* I1 )
+KOKKOS_INLINE_FUNCTION
+int intersect2D_2Segments( Segment2D S1, Segment2D S2, Point2D* I0, Point2D* I1 )
 {
     Vector2D u = sub(S1.P1,S1.P0);
     Vector2D v = sub(S2.P1,S2.P0);

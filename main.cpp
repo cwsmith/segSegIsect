@@ -161,10 +161,133 @@ void test(Segment2D u, Segment2D v, int exp, Point2D pt) {
   draw(u,v,ret);
 }
 
+typedef Kokkos::View<Real*, Kokkos::HostSpace> Reals_h;
+typedef Kokkos::View<Real*> Reals_d;
+typedef Kokkos::View<int*, Kokkos::HostSpace> Ints_h;
+typedef Kokkos::View<int*> Ints_d;
+
+typedef struct {
+  Reals_h x1;
+  Reals_h x2;
+  Reals_h y1;
+  Reals_h y2;
+  Reals_h xpt;
+  Reals_h ypt;
+  Ints_h res;
+} TestViews;
+
+int addTest(Segment2D u, Segment2D v, Point2D pt, int r,
+    int testIdx, TestViews& tv) {
+  tv.x1(testIdx) = u.P0[0];
+  tv.y1(testIdx) = u.P0[1];
+  tv.x2(testIdx) = u.P1[0];
+  tv.y2(testIdx) = u.P1[1];
+  tv.x1(testIdx+1) = v.P0[0];
+  tv.y1(testIdx+1) = v.P0[1];
+  tv.x2(testIdx+1) = v.P1[0];
+  tv.y2(testIdx+1) = v.P1[1];
+  tv.res(testIdx) = r;
+  if( r == 1 ) {
+    tv.xpt(testIdx) = pt.x;
+    tv.ypt(testIdx) = pt.y;
+  }
+  return ++testIdx;
+}
+
+void runTests(TestViews& tv, int numTests) {
+  auto x1 = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.x1);
+  auto x2 = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.x2);
+  auto y1 = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.y1);
+  auto y2 = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.y2);
+  auto xpt = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.xpt);
+  auto ypt = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.ypt);
+  auto res = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.res);
+  Kokkos::parallel_for("kktest", numTests, KOKKOS_LAMBDA(const int i) {
+    Segment2D u,v;
+    u.P0[0] = x1(i);
+    u.P0[1] = y1(i);
+    u.P1[0] = x2(i);
+    u.P1[1] = y2(i);
+    v.P0[0] = x1(i+1);
+    v.P0[1] = y1(i+1);
+    v.P1[0] = x2(i+1);
+    v.P1[1] = y2(i+1);
+    Point2D pt;
+    pt.x = xpt(i);
+    pt.y = ypt(i);
+    const int exp = res(i);
+    Point2D a,b;
+    int ret = intersect2D_2Segments(u,v,&a,&b);
+    if(ret != exp)
+      printf("test %d failed\n", i);
+    assert(ret == exp);
+    if( ret == 1 )
+      assert(a.x == pt.x && a.y == pt.y);
+  });
+}
+
 void kkTests() {
   auto numTests = 22;
-  Kokkos::View<Real*, Kokkos::HostSpace> x("x", numTests*2);
-  Kokkos::View<Real*, Kokkos::HostSpace> y("y", numTests*2);
+  TestViews tv;
+  tv.x1 = Reals_h("x1", numTests*2);
+  tv.x2 = Reals_h("x2", numTests*2);
+  tv.y1 = Reals_h("y1", numTests*2);
+  tv.y2 = Reals_h("y2", numTests*2);
+  tv.xpt = Reals_h("xpt", numTests);
+  tv.ypt = Reals_h("ypt", numTests);
+  tv.res = Ints_h("res", numTests);
+  Segment2D u, v;
+  Point2D pt;
+  int res;
+  int testIdx = 0;
+  f1(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f2(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f3(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f4(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f5(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f6(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f7(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f8(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f9(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f10(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  f11(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+
+  t0(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t1(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t2(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t3(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t4(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t5(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t6(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t7(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t8(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t9(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+  t10(&u, &v, &res, &pt);
+  testIdx = addTest(u,v,pt,res,testIdx,tv);
+
+  assert(testIdx == numTests);
+  runTests(tv, numTests);
 }
 
 int main(int argc, char** argv) {
