@@ -178,20 +178,32 @@ typedef struct {
 
 int addTest(Segment2D u, Segment2D v, Point2D pt, int r,
     int testIdx, TestViews& tv) {
-  tv.x1(testIdx) = u.P0[0];
-  tv.y1(testIdx) = u.P0[1];
-  tv.x2(testIdx) = u.P1[0];
-  tv.y2(testIdx) = u.P1[1];
-  tv.x1(testIdx+1) = v.P0[0];
-  tv.y1(testIdx+1) = v.P0[1];
-  tv.x2(testIdx+1) = v.P1[0];
-  tv.y2(testIdx+1) = v.P1[1];
+  auto idx = testIdx*2;
+  tv.x1(idx) = u.P0[0];
+  tv.y1(idx) = u.P0[1];
+  tv.x2(idx) = u.P1[0];
+  tv.y2(idx) = u.P1[1];
+  tv.x1(idx+1) = v.P0[0];
+  tv.y1(idx+1) = v.P0[1];
+  tv.x2(idx+1) = v.P1[0];
+  tv.y2(idx+1) = v.P1[1];
   tv.res(testIdx) = r;
   if( r == 1 ) {
     tv.xpt(testIdx) = pt.x;
     tv.ypt(testIdx) = pt.y;
   }
-  return ++testIdx;
+  return testIdx+1;
+}
+
+//borrowed from Omega_h
+KOKKOS_INLINE_FUNCTION
+bool are_close(Real a, Real b) {
+  const Real floor = 1e-10;
+  Real am = abs(a);
+  Real bm = abs(b);
+  if (am <= floor && bm <= floor) return true;
+  Real max = (a < b) ? (b) : (a);
+  return (abs(b - a) / max) < floor;
 }
 
 void runTests(TestViews& tv, int numTests) {
@@ -203,26 +215,42 @@ void runTests(TestViews& tv, int numTests) {
   auto ypt = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.ypt);
   auto res = Kokkos::create_mirror_view_and_copy(Kokkos::CudaSpace(), tv.res);
   Kokkos::parallel_for("kktest", numTests, KOKKOS_LAMBDA(const int i) {
+    int idx = i*2;
     Segment2D u,v;
-    u.P0[0] = x1(i);
-    u.P0[1] = y1(i);
-    u.P1[0] = x2(i);
-    u.P1[1] = y2(i);
-    v.P0[0] = x1(i+1);
-    v.P0[1] = y1(i+1);
-    v.P1[0] = x2(i+1);
-    v.P1[1] = y2(i+1);
+    u.P0[0] = x1(idx);
+    u.P0[1] = y1(idx);
+    u.P1[0] = x2(idx);
+    u.P1[1] = y2(idx);
+    v.P0[0] = x1(idx+1);
+    v.P0[1] = y1(idx+1);
+    v.P1[0] = x2(idx+1);
+    v.P1[1] = y2(idx+1);
     Point2D pt;
     pt.x = xpt(i);
     pt.y = ypt(i);
     const int exp = res(i);
     Point2D a,b;
     int ret = intersect2D_2Segments(u,v,&a,&b);
-    if(ret != exp)
-      printf("test %d failed\n", i);
+    if(ret != exp) {
+      printf("test %d failed: ret %d exp %d u %.3f %.3f %.3f %.3f v %.3f %.3f %.3f %.3f\n",
+        i, ret, exp,
+        u.P0[0],
+        u.P0[1],
+        u.P1[0],
+        u.P1[1],
+        v.P0[0],
+        v.P0[1],
+        v.P1[0],
+        v.P1[1]);
+    }
     assert(ret == exp);
-    if( ret == 1 )
-      assert(a.x == pt.x && a.y == pt.y);
+    if( ret == 1 ) {
+      if( !are_close(a.x,pt.x) || !are_close(a.y,pt.y) ) {
+        printf("test %d failed: pt %f %f a %f %f\n",
+            i, pt.x, pt.y, a.x, a.y);
+      }
+      assert( are_close(a.x,pt.x) && are_close(a.y,pt.y) );
+    }
   });
 }
 
@@ -293,7 +321,6 @@ void kkTests() {
 int main(int argc, char** argv) {
   Kokkos::initialize( argc, argv );
 
-  kkTests();
 
   outfile = fopen("points.gp","w");
   Segment2D u, v;  
@@ -345,6 +372,10 @@ int main(int argc, char** argv) {
   t10(&u, &v, &res, &pt);
   test(u, v, res, pt);
   fclose(outfile);
+  printf("serial tests passed\n");
+
+  kkTests();
+
   Kokkos::finalize();
   return 0;
 }
