@@ -3,26 +3,20 @@
 
 # build
 
+Ensure that `nvcc` is in your `PATH` before building.
+
 ```
-<your C++ compiler here> main.cpp
+mkdir build
+cd build
+cmake /path/to/segSegIsect/ -DKOKKOS_DIR=/path/to/kokkos/install/lib/CMake \
+-DCMAKE_CXX_COMPILER=/path/to/kokkos/bin/nvcc_wrapper
+make
 ```
 
 # run
 
 ```
-./a.out
-```
-
-# check code coverage using GCC and GCOV
-
-```
-./cov.sh
-```
-
-# check for memory leaks and errors using Valgrind
-
-```
-./memcheck.sh
+./kkmain
 ```
 
 # test cases
